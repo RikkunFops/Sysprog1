@@ -43,17 +43,15 @@ cons_writeline:
     call    cons_write_crlf
     ret    
 
+
 reset_sequence:
     call    cons_write_crlf
     xorw    %ax, %ax                 # Set %ax to zero
     movw    %ax, %bx                  # -> Clear bx
     movw    %ax, %cx                 # -> Clear cx
     movw    %ax, %dx                 # -> Clear dx
-    movw    %ax, %ds                 # -> Data Segment
-    movw    %ax, %es                 # -> Extra Segment
-    movw    %ax, %ss                 # -> Stack Segment
-    movw    %ax, %si                 # -> Source Index Register
-    movw    $0, %sp                  # Set the stack to the top of the segment
+    
+    #movw    $0, %sp                  # Set the stack to the top of the segment
 
 get_selection:
     xorw    %cx, %cx
@@ -72,7 +70,7 @@ ThousandNumber:
     movb    %al, %cl
     sub     $48, %cl   
                     
-    #imul    $1000, %cx                   # Multiply the register to get 100 digit
+    #imul    $1000, %cx                 
     pushw   %cx
 
 HundredNumber: 
@@ -123,28 +121,27 @@ OneNumber:
     sub     $48, %cl
     pushw   %cx
 
-preassemble:
-    xor     %ax, %ax
+
        
 reassemble:
     popw    %ax
     
-    imul    $1, %ax
+    imul    $1, %ax                       # Multiply the register to get the 1 digit
     add     %ax, %bx
 
     popw    %ax
     
-    imul    $10, %ax
+    imul    $10, %ax                    # Multiply the register to get the 10 digit
     add     %ax, %bx
 
     popw    %ax
  
-    imul    $100, %ax
+    imul    $100, %ax                   # Multiply the register to get the 100 digit
     add     %ax, %bx
 
     popw    %ax
 
-    imul    $1000, %ax
+    imul    $1000, %ax                  # Multiply the register to get the 1000 digit
     add     %ax, %bx
 
 
@@ -152,8 +149,9 @@ read_sector:
     movw    $disk_address_packet, %si   # Move address of the disk address packet into SI
     movw    $1, 2(%si)                  # Set the number of blocks to read to be 1
     movw    $0xd000, 4(%si)             # Set the address to read into to be 0x9000
-    mov     %bx, 8(%si)                  # Set the first block to read to be block 1
+    movw    %bx, 8(%si)                  # Set the first block to read to be block 1
     movb    $0x42, %ah                  # 0x42 is the int 13h BIOS function to read the disk using LBA addressing	
+    movb    (boot_device), %dl
     int     $0x13                       # Read the disk
     jc      read_failed	                # The carry flag will be set if an error occured
 
@@ -270,7 +268,7 @@ is_finished:
     call    cons_writeline
     movb    $0x10, %ah
     int     $0x16
-    jmp     finish
+    jmp     reset_sequence
 
  
 
